@@ -2,7 +2,7 @@
 #![cfg_attr(not(feature = "dev"), windows_subsystem = "windows")]
 
 use bevy::prelude::*;
-use silt_ranch::AppPlugin;
+use silt_road::AppPlugin;
 
 fn main() -> AppExit {
     App::new().add_plugins(AppPlugin).run()
