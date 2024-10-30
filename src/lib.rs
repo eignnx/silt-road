@@ -1,96 +1,91 @@
-mod asset_tracking;
-pub mod audio;
-mod demo;
-#[cfg(feature = "dev")]
-mod dev_tools;
-mod screens;
-mod theme;
-
 use bevy::{
-    asset::AssetMetaCheck,
-    audio::{AudioPlugin, Volume},
+    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     prelude::*,
 };
+use bevy_ecs_tilemap::prelude::*;
+use rand::{thread_rng, Rng};
 
-pub struct AppPlugin;
+#[cfg(feature = "dev")]
+mod dev_tools;
 
-impl Plugin for AppPlugin {
-    fn build(&self, app: &mut App) {
-        // Order new `AppStep` variants by adding them here:
-        app.configure_sets(
-            Update,
-            (AppSet::TickTimers, AppSet::RecordInput, AppSet::Update).chain(),
-        );
+mod helpers;
 
-        // Spawn the main camera.
-        app.add_systems(Startup, spawn_camera);
-
-        // Add Bevy plugins.
-        app.add_plugins(
-            DefaultPlugins
-                .set(AssetPlugin {
-                    // Wasm builds will check for meta files (that don't exist) if this isn't set.
-                    // This causes errors and even panics on web build on itch.
-                    // See https://github.com/bevyengine/bevy_github_ci_template/issues/48.
-                    meta_check: AssetMetaCheck::Never,
-                    ..default()
-                })
-                .set(WindowPlugin {
-                    primary_window: Window {
-                        title: "Silt Road".to_string(),
-                        canvas: Some("#bevy".to_string()),
-                        fit_canvas_to_parent: true,
-                        prevent_default_event_handling: true,
-                        ..default()
-                    }
-                    .into(),
-                    ..default()
-                })
-                .set(AudioPlugin {
-                    global_volume: GlobalVolume {
-                        volume: Volume::new(0.3),
-                    },
-                    ..default()
+pub fn plugin(app: &mut App) {
+    app.add_plugins(
+        DefaultPlugins
+            .set(WindowPlugin {
+                primary_window: Some(Window {
+                    title: String::from("Random Map Example"),
+                    ..Default::default()
                 }),
-        );
+                ..default()
+            })
+            .set(ImagePlugin::default_nearest()),
+    )
+    .add_plugins(LogDiagnosticsPlugin::default())
+    .add_plugins(FrameTimeDiagnosticsPlugin)
+    .add_plugins(TilemapPlugin)
+    .add_systems(Startup, startup)
+    .add_systems(Update, helpers::camera::movement)
+    .add_systems(Update, random);
+}
 
-        // Add other plugins.
-        app.add_plugins((
-            asset_tracking::plugin,
-            demo::plugin,
-            screens::plugin,
-            theme::plugin,
-        ));
+fn startup(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn(Camera2dBundle::default());
 
-        // Enable dev tools for dev builds.
-        #[cfg(feature = "dev")]
-        app.add_plugins(dev_tools::plugin);
+    let texture_handle: Handle<Image> = asset_server.load("tiles.png");
+
+    let map_size = TilemapSize { x: 320, y: 320 };
+    let mut tile_storage = TileStorage::empty(map_size);
+    let tilemap_entity = commands.spawn_empty().id();
+
+    for x in 0..320u32 {
+        for y in 0..320u32 {
+            let tile_pos = TilePos { x, y };
+            let tile_entity = commands
+                .spawn((
+                    TileBundle {
+                        position: tile_pos,
+                        tilemap_id: TilemapId(tilemap_entity),
+                        ..Default::default()
+                    },
+                    LastUpdate::default(),
+                ))
+                .id();
+            tile_storage.set(&tile_pos, tile_entity);
+        }
     }
+
+    let tile_size = TilemapTileSize { x: 16.0, y: 16.0 };
+    let grid_size = tile_size.into();
+    let map_type = TilemapType::default();
+
+    commands.entity(tilemap_entity).insert(TilemapBundle {
+        grid_size,
+        map_type,
+        size: map_size,
+        storage: tile_storage,
+        texture: TilemapTexture::Single(texture_handle),
+        tile_size,
+        transform: get_tilemap_center_transform(&map_size, &grid_size, &map_type, 0.0),
+        ..Default::default()
+    });
 }
 
-/// High-level groupings of systems for the app in the `Update` schedule.
-/// When adding a new variant, make sure to order it in the `configure_sets`
-/// call above.
-#[derive(SystemSet, Debug, Clone, Copy, Eq, PartialEq, Hash, PartialOrd, Ord)]
-enum AppSet {
-    /// Tick timers.
-    TickTimers,
-    /// Record player input.
-    RecordInput,
-    /// Do everything else (consider splitting this into further variants).
-    Update,
+#[derive(Default, Component)]
+struct LastUpdate {
+    value: f64,
 }
 
-fn spawn_camera(mut commands: Commands) {
-    commands.spawn((
-        Name::new("Camera"),
-        Camera2dBundle::default(),
-        // Render all UI to this camera.
-        // Not strictly necessary since we only use one camera,
-        // but if we don't use this component, our UI will disappear as soon
-        // as we add another camera. This includes indirect ways of adding cameras like using
-        // [ui node outlines](https://bevyengine.org/news/bevy-0-14/#ui-node-outline-gizmos)
-        // for debugging. So it's good to have this here for future-proofing.
-        IsDefaultUiCamera,
-    ));
+// In this example it's better not to use the default `MapQuery` SystemParam as
+// it's faster to do it this way:
+fn random(time: ResMut<Time>, mut query: Query<(&mut TileTextureIndex, &mut LastUpdate)>) {
+    let current_time = time.elapsed_seconds_f64();
+    let mut random = thread_rng();
+    for (mut tile, mut last_update) in query.iter_mut() {
+        if (current_time - last_update.value) > 0.2 {
+            tile.0 = random.gen_range(0..6);
+            last_update.value = current_time;
+        }
+    }
 }
