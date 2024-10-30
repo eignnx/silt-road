@@ -30,9 +30,10 @@ fn spawn_chunks_around_camera(
         let camera_chunk_pos = camera_pos_to_chunk_pos(&transform.translation.xy());
         for y in (camera_chunk_pos.y - 1)..=(camera_chunk_pos.y + 1) {
             for x in (camera_chunk_pos.x - 1)..=(camera_chunk_pos.x + 1) {
-                if !chunk_manager.spawned_chunks.contains(&IVec2::new(x, y)) {
-                    chunk_manager.spawned_chunks.insert(IVec2::new(x, y));
-                    spawn_chunk(&mut commands, &asset_server, IVec2::new(x, y));
+                let chunk_pos = IVec2::new(x, y);
+                if !chunk_manager.spawned_chunks.contains(&chunk_pos) {
+                    chunk_manager.spawned_chunks.insert(chunk_pos);
+                    spawn_chunk(&mut commands, &asset_server, chunk_pos);
                 }
             }
         }
@@ -51,19 +52,19 @@ fn spawn_chunk(commands: &mut Commands, asset_server: &AssetServer, chunk_pos: I
     let mut tile_storage = TileStorage::empty(TILES_PER_CHUNK.into());
 
     // Spawn the elements of the tilemap.
-    for x in 0..TILES_PER_CHUNK.x {
-        for y in 0..TILES_PER_CHUNK.y {
-            let global_tile_pos = [
-                (chunk_pos.x + x as i32) as f64,
-                (chunk_pos.y + y as i32) as f64,
-            ];
+    for x in 0..TILES_PER_CHUNK.x as i32 {
+        for y in 0..TILES_PER_CHUNK.y as i32 {
+            let tile_pos = IVec2::new(x, y);
+            let global_tile_pos = (chunk_pos * TILES_PER_CHUNK.as_ivec2() + tile_pos)
+                .as_dvec2()
+                .to_array();
             let noise_val = generator.sample(global_tile_pos); // `noise_val` is between -1.0 and +1.0.
             let norm_noise_val = (noise_val + 1.0) / 2.0; // Now between 0.0 and +1.0.
 
             let tile_index = TileTextureIndex((norm_noise_val * 6.0).floor() as u32);
 
             spawn_tile(
-                TilePos { x, y },
+                tile_pos.as_uvec2().into(),
                 tile_index,
                 commands,
                 tilemap_entity,
