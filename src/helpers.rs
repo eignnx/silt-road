@@ -27,20 +27,21 @@ pub mod camera {
                 direction -= Vec3::new(0.0, 1.0, 0.0);
             }
 
-            if keyboard_input.pressed(KeyCode::KeyZ) {
-                ortho.scale += 0.1;
+            if keyboard_input.pressed(KeyCode::KeyZ) || keyboard_input.pressed(KeyCode::BracketLeft)
+            {
+                ortho.scale *= 1.01;
             }
 
-            if keyboard_input.pressed(KeyCode::KeyX) {
-                ortho.scale -= 0.1;
+            if keyboard_input.pressed(KeyCode::KeyX)
+                || keyboard_input.pressed(KeyCode::BracketRight)
+            {
+                ortho.scale /= 1.01;
             }
 
-            if ortho.scale < 0.5 {
-                ortho.scale = 0.5;
-            }
+            ortho.scale = ortho.scale.clamp(0.05, 5.0);
 
             let z = transform.translation.z;
-            transform.translation += time.delta_seconds() * direction * 500.;
+            transform.translation += time.delta_seconds() * direction * 150.;
             // Important! We need to restore the Z values when moving the camera around.
             // Bevy has a specific camera setup and this can mess with how our layers are shown.
             transform.translation.z = z;

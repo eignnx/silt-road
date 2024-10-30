@@ -4,21 +4,15 @@ use bevy::{
     utils::HashSet,
 };
 use bevy_ecs_tilemap::prelude::*;
-use rand::{thread_rng, Rng};
+use libnoise::Generator;
+
+use crate::constants::{CHUNK_SIZE, RENDER_CHUNK_SIZE, TILE_SIZE};
 
 #[cfg(feature = "dev")]
 mod dev_tools;
 
+mod constants;
 mod helpers;
-
-const TILE_SIZE: TilemapTileSize = TilemapTileSize { x: 16.0, y: 16.0 };
-// For this example, don't choose too large a chunk size.
-const CHUNK_SIZE: UVec2 = UVec2 { x: 4, y: 4 };
-// Render chunk sizes are set to 4 render chunks per user specified chunk.
-const RENDER_CHUNK_SIZE: UVec2 = UVec2 {
-    x: CHUNK_SIZE.x * 2,
-    y: CHUNK_SIZE.y * 2,
-};
 
 pub fn plugin(app: &mut App) {
     app.add_plugins(
@@ -37,10 +31,16 @@ pub fn plugin(app: &mut App) {
     .add_plugins(FrameTimeDiagnosticsPlugin)
     .add_plugins(TilemapPlugin)
     .add_systems(Startup, startup)
-    .add_systems(Update, helpers::camera::movement)
-    .add_systems(Update, spawn_chunks_around_camera)
-    .add_systems(Update, despawn_outofrange_chunks)
-    .add_systems(Update, random);
+    .add_systems(
+        Update,
+        (
+            helpers::camera::movement,
+            spawn_chunks_around_camera,
+            despawn_outofrange_chunks,
+        ),
+    );
+
+    app.add_plugins(dev_tools::plugin);
 }
 
 fn startup(mut commands: Commands) {
@@ -76,19 +76,27 @@ fn spawn_chunks_around_camera(
 fn spawn_chunk(commands: &mut Commands, asset_server: &AssetServer, chunk_pos: IVec2) {
     let tilemap_entity = commands.spawn_empty().id();
     let mut tile_storage = TileStorage::empty(CHUNK_SIZE.into());
+
+    let generator = libnoise::Source::simplex(1234).fbm(5, 0.013, 2.0, 0.5);
+
     // Spawn the elements of the tilemap.
     for x in 0..CHUNK_SIZE.x {
         for y in 0..CHUNK_SIZE.y {
-            let tile_pos = TilePos { x, y };
-            let tile_entity = commands
-                .spawn(TileBundle {
-                    position: tile_pos,
-                    tilemap_id: TilemapId(tilemap_entity),
-                    ..Default::default()
-                })
-                .id();
-            commands.entity(tilemap_entity).add_child(tile_entity);
-            tile_storage.set(&tile_pos, tile_entity);
+            // noise_val is between -1.0 and +1.0.
+            let noise_val = generator.sample([
+                (chunk_pos.x + x as i32) as f64 / 10.0,
+                (chunk_pos.y + y as i32) as f64 / 10.0,
+            ]);
+            let norm_noise_val = (noise_val + 1.0) / 2.0; // Now between 0.0 and +1.0.
+
+            let tile_index = TileTextureIndex((norm_noise_val * 6.0).floor() as u32);
+            spawn_tile(
+                TilePos { x, y },
+                tile_index,
+                commands,
+                tilemap_entity,
+                &mut tile_storage,
+            );
         }
     }
 
@@ -97,26 +105,50 @@ fn spawn_chunk(commands: &mut Commands, asset_server: &AssetServer, chunk_pos: I
         chunk_pos.y as f32 * CHUNK_SIZE.y as f32 * TILE_SIZE.y,
         0.0,
     ));
-    let texture_handle: Handle<Image> = asset_server.load("tiles.png");
-    commands.entity(tilemap_entity).insert(TilemapBundle {
-        grid_size: TILE_SIZE.into(),
-        size: CHUNK_SIZE.into(),
-        storage: tile_storage,
-        texture: TilemapTexture::Single(texture_handle),
-        tile_size: TILE_SIZE,
-        transform,
-        render_settings: TilemapRenderSettings {
-            render_chunk_size: RENDER_CHUNK_SIZE,
+
+    let texture_handle: Handle<Image> = asset_server.load("TexturedGrass.png");
+
+    commands.entity(tilemap_entity).insert((
+        Name::new(format!("Chunk: ({}, {})", chunk_pos.x, chunk_pos.y)),
+        TilemapBundle {
+            grid_size: TILE_SIZE.into(),
+            size: CHUNK_SIZE.into(),
+            storage: tile_storage,
+            texture: TilemapTexture::Single(texture_handle),
+            tile_size: TILE_SIZE,
+            transform,
+            render_settings: TilemapRenderSettings {
+                render_chunk_size: RENDER_CHUNK_SIZE,
+                ..Default::default()
+            },
             ..Default::default()
         },
-        ..Default::default()
-    });
+    ));
+}
+
+fn spawn_tile(
+    position: TilePos,
+    texture_index: TileTextureIndex,
+    commands: &mut Commands<'_, '_>,
+    tilemap_entity: Entity,
+    tile_storage: &mut TileStorage,
+) {
+    let tile_entity = commands
+        .spawn(TileBundle {
+            position,
+            tilemap_id: TilemapId(tilemap_entity),
+            texture_index,
+            ..Default::default()
+        })
+        .id();
+    commands.entity(tilemap_entity).add_child(tile_entity);
+    tile_storage.set(&position, tile_entity);
 }
 
 fn despawn_outofrange_chunks(
     mut commands: Commands,
     camera_query: Query<&Transform, With<Camera>>,
-    chunks_query: Query<(Entity, &Transform)>,
+    chunks_query: Query<(Entity, &Transform), With<Chunk>>,
     mut chunk_manager: ResMut<ChunkManager>,
 ) {
     for camera_transform in camera_query.iter() {
@@ -138,20 +170,5 @@ struct ChunkManager {
     pub spawned_chunks: HashSet<IVec2>,
 }
 
-#[derive(Default, Component)]
-struct LastUpdate {
-    value: f64,
-}
-
-// In this example it's better not to use the default `MapQuery` SystemParam as
-// it's faster to do it this way:
-fn random(time: ResMut<Time>, mut query: Query<(&mut TileTextureIndex, &mut LastUpdate)>) {
-    let current_time = time.elapsed_seconds_f64();
-    let mut random = thread_rng();
-    for (mut tile, mut last_update) in query.iter_mut() {
-        if (current_time - last_update.value) > 0.2 {
-            tile.0 = random.gen_range(0..6);
-            last_update.value = current_time;
-        }
-    }
-}
+#[derive(Debug, Default, Component)]
+struct Chunk;
