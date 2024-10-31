@@ -1,14 +1,16 @@
-use bevy::{
-    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
-    prelude::*,
-};
+use bevy::prelude::*;
 
 #[cfg(feature = "dev")]
 mod dev_tools;
 
 mod constants;
 mod helpers;
+
+#[allow(unused)]
 mod terrain;
+
+mod inventory;
+mod theme;
 
 pub fn plugin(app: &mut App) {
     app.add_plugins(
@@ -21,17 +23,18 @@ pub fn plugin(app: &mut App) {
                 ..default()
             })
             .set(ImagePlugin::default_nearest()),
-    )
-    .add_plugins((
-        LogDiagnosticsPlugin::default(),
-        FrameTimeDiagnosticsPlugin,
-        terrain::plugin,
-    ))
-    .add_systems(Startup, startup)
-    .add_systems(Update, helpers::camera::movement);
+    );
+
+    app.add_plugins((
+        // terrain::plugin,
+        inventory::plugin,
+    ));
+
+    app.add_systems(Startup, startup);
+    app.add_systems(Update, helpers::camera::movement);
 
     #[cfg(feature = "dev")]
-    app.add_plugins(dev_tools::plugin);
+    app.add_plugins((dev_tools::plugin,));
 }
 
 fn startup(mut commands: Commands) {
