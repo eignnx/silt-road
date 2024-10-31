@@ -5,7 +5,7 @@ use bevy::{
 
 use crate::constants::PIXELS_PER_TILE;
 
-use super::chunk::ChunkCoord;
+use super::{chunk::ChunkCoord, world_gen::tile_type};
 
 pub(super) struct SpawnTile {
     pub(super) tile_pos: UVec2,
@@ -34,11 +34,10 @@ pub(super) fn spawn_tile(
         None,             // offset
     ));
 
-    let screen_pos = IVec2::ZERO // (spawn_cmd.chunk_coord.xy() * TILES_PER_CHUNK as i32
-        + spawn_cmd.tile_pos.as_ivec2()//)
-        * PIXELS_PER_TILE as i32;
-
+    let screen_pos = IVec2::ZERO + spawn_cmd.tile_pos.as_ivec2() * PIXELS_PER_TILE as i32;
     let transform = Transform::from_translation(screen_pos.as_vec2().extend(0.0));
+
+    let texture_index = tile_type(spawn_cmd.chunk_coord, spawn_cmd.tile_pos).texture_index();
 
     let tile_entity = commands
         .spawn((
@@ -55,7 +54,7 @@ pub(super) fn spawn_tile(
             },
             TextureAtlas {
                 layout: texture_atlas_layout,
-                index: 2,
+                index: texture_index,
             },
         ))
         .id();
