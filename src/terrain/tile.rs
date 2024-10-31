@@ -10,6 +10,7 @@ use super::chunk::ChunkCoord;
 pub(super) struct SpawnTile {
     pub(super) tile_pos: UVec2,
     pub(super) chunk_coord: ChunkCoord,
+    pub(super) chunk_entity: Entity,
 }
 
 impl Command for SpawnTile {
@@ -33,27 +34,33 @@ pub(super) fn spawn_tile(
         None,             // offset
     ));
 
-    let screen_pos = (spawn_cmd.chunk_coord.xy() * TILES_PER_CHUNK as i32
-        + spawn_cmd.tile_pos.as_ivec2())
+    let screen_pos = IVec2::ZERO // (spawn_cmd.chunk_coord.xy() * TILES_PER_CHUNK as i32
+        + spawn_cmd.tile_pos.as_ivec2()//)
         * PIXELS_PER_TILE as i32;
 
     let transform = Transform::from_translation(screen_pos.as_vec2().extend(0.0));
 
-    commands.spawn((
-        Name::new("Tile"),
-        spawn_cmd.chunk_coord,
-        SpriteBundle {
-            transform,
-            texture,
-            sprite: Sprite {
-                anchor: bevy::sprite::Anchor::BottomLeft,
+    let tile_entity = commands
+        .spawn((
+            Name::new("Tile"),
+            spawn_cmd.chunk_coord,
+            SpriteBundle {
+                transform,
+                texture,
+                sprite: Sprite {
+                    anchor: bevy::sprite::Anchor::BottomLeft,
+                    ..default()
+                },
                 ..default()
             },
-            ..default()
-        },
-        TextureAtlas {
-            layout: texture_atlas_layout,
-            index: 2,
-        },
-    ));
+            TextureAtlas {
+                layout: texture_atlas_layout,
+                index: 2,
+            },
+        ))
+        .id();
+
+    commands
+        .entity(spawn_cmd.chunk_entity)
+        .add_child(tile_entity);
 }

@@ -5,7 +5,7 @@ use bevy::{
     prelude::*,
 };
 
-use crate::constants::{PIXELS_PER_TILE, TILES_PER_CHUNK};
+use crate::constants::{PIXELS_PER_CHUNK, PIXELS_PER_TILE, TILES_PER_CHUNK};
 
 use super::tile::SpawnTile;
 
@@ -13,6 +13,9 @@ pub(super) fn plugin(app: &mut App) {
     app //<rustfmt ignore>
         .add_systems(Update, draw_gizmos);
 }
+
+#[derive(Component, Reflect)]
+pub(super) struct Chunk(pub(super) ChunkCoord);
 
 #[derive(Debug, Default, Component, Reflect, Clone, Copy, PartialEq, Eq, Hash)]
 pub(super) struct ChunkCoord(pub(super) IVec2);
@@ -54,12 +57,25 @@ impl Command for SpawnChunk {
 }
 
 fn spawn_chunk(In(spawn_cmd): In<SpawnChunk>, mut commands: Commands) {
+    let chunk_coord = spawn_cmd.chunk_coord;
+
+    let chunk_entity = commands
+        .spawn((
+            Name::new("Chunk"),
+            Chunk(chunk_coord),
+            SpatialBundle::from_transform(Transform::from_translation(
+                (chunk_coord.as_vec2() * PIXELS_PER_CHUNK).extend(0.0),
+            )),
+        ))
+        .id();
+
     for x in 0..TILES_PER_CHUNK {
         for y in 0..TILES_PER_CHUNK {
             commands.add(SpawnTile {
                 tile_pos: UVec2 { x, y },
                 chunk_coord: spawn_cmd.chunk_coord,
-            })
+                chunk_entity,
+            });
         }
     }
 }

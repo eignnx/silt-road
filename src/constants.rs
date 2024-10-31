@@ -1,2 +1,3 @@
 pub const PIXELS_PER_TILE: u32 = 16;
 pub const TILES_PER_CHUNK: u32 = 8;
+pub const PIXELS_PER_CHUNK: f32 = PIXELS_PER_TILE as f32 * TILES_PER_CHUNK as f32;
