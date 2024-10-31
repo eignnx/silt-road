@@ -3,7 +3,7 @@ use bevy::{
     prelude::*,
 };
 
-use crate::constants::{PIXELS_PER_TILE, TILES_PER_CHUNK};
+use crate::constants::PIXELS_PER_TILE;
 
 use super::chunk::ChunkCoord;
 
