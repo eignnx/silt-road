@@ -5,14 +5,16 @@ use libnoise::Generator;
 use crate::constants::{PIXELS_PER_TILE, TILES_PER_CHUNK};
 
 pub(super) fn plugin(app: &mut App) {
-    app.insert_resource(ChunkManager::default()).add_systems(
-        Update,
-        (
-            spawn_chunks_around_camera,
-            despawn_outofrange_chunks,
-            draw_gizmos,
-        ),
-    );
+    app //<rustfmt ignore>
+        .insert_resource(ChunkManager::default())
+        .add_systems(
+            Update,
+            (
+                spawn_chunks_around_camera,
+                despawn_outofrange_chunks,
+                draw_gizmos,
+            ),
+        );
     // .add_systems(Startup, spawn_single_chunk);
 }
 

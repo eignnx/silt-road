@@ -30,6 +30,7 @@ pub fn plugin(app: &mut App) {
     .add_systems(Startup, startup)
     .add_systems(Update, helpers::camera::movement);
 
+    #[cfg(feature = "dev")]
     app.add_plugins(dev_tools::plugin);
 }
 
