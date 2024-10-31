@@ -79,6 +79,7 @@ jobs:
       - get-version
     env:
       version: ${{ needs.get-version.outputs.version }}
+      RUSTFLAGS: "--cfg=web_sys_unstable_apis"
     strategy:
       matrix:
         include:
