@@ -10,6 +10,7 @@ mod helpers;
 mod terrain;
 
 mod inventory;
+mod screens;
 mod theme;
 
 pub fn plugin(app: &mut App) {
@@ -28,6 +29,8 @@ pub fn plugin(app: &mut App) {
     app.add_plugins((
         // terrain::plugin,
         inventory::plugin,
+        screens::plugin,
+        theme::plugin,
     ));
 
     app.add_systems(Startup, startup);
