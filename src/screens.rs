@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    commodity::{Commodity, Quality, Quantity},
+    commodities::{Commodity, Quality, Quantity},
     inventory::PlayerInventory,
     theme::{
         interaction::OnPress,

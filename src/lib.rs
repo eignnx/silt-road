@@ -11,7 +11,7 @@ mod terrain;
 
 mod caravan;
 mod character;
-mod commodity;
+mod commodities;
 mod inventory;
 mod screens;
 mod theme;
@@ -40,7 +40,7 @@ pub fn plugin(app: &mut App) {
         inventory::plugin,
         screens::plugin,
         theme::plugin,
-        commodity::plugin,
+        commodities::plugin,
     ));
 
     app.add_systems(Startup, startup);

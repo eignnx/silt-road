@@ -13,32 +13,6 @@ pub(super) fn plugin(app: &mut App) {
             );
         }
     });
-
-    app.add_systems(Startup, || {
-        let mut high_quality = Quantity(100);
-        let mut average_quality = Quantity(100);
-        let mut low_quality = Quantity(100);
-
-        println!(
-            "High: {}, Average: {}, Low: {}",
-            high_quality.0, average_quality.0, low_quality.0
-        );
-
-        for _ in 0..10 {
-            degrade_quality(
-                &mut CommodityQualitySummary {
-                    high_quality: &mut high_quality,
-                    average_quality: &mut average_quality,
-                    low_quality: &mut low_quality,
-                },
-                0.1,
-            );
-            println!(
-                "High: {}, Average: {}, Low: {}",
-                high_quality.0, average_quality.0, low_quality.0
-            );
-        }
-    });
 }
 
 #[derive(Component, Debug, Clone, Copy, Reflect, Sequence)]
@@ -121,47 +95,4 @@ pub fn display_unit_price(unit_price: f32, unit: &'static str) -> String {
     } else {
         format!("${unit_price:.2} per {unit}")
     }
-}
-
-#[derive(Component, Debug, Clone, Copy)]
-pub struct Quantity(pub u32);
-
-#[derive(Component, Debug, Clone, Copy)]
-pub enum Quality {
-    Low,
-    High,
-}
-
-impl Quality {
-    #[allow(unused)]
-    pub fn price_modifier(&self) -> f32 {
-        match self {
-            Quality::Low => 0.75,
-            Quality::High => 1.25,
-        }
-    }
-}
-
-#[allow(unused)]
-#[derive(Debug)]
-pub struct CommodityQualitySummary<'a> {
-    pub high_quality: &'a mut Quantity,
-    pub average_quality: &'a mut Quantity,
-    pub low_quality: &'a mut Quantity,
-}
-
-#[allow(unused)]
-pub fn degrade_quality<'a: 'b, 'b>(
-    quality_summary: &'b mut CommodityQualitySummary<'a>,
-    degradation_pct: f32,
-) {
-    // Higher quality things degrade faster.
-    let high_quality_degradation = degradation_pct * 1.25;
-    let high_to_mid = (quality_summary.high_quality.0 as f32 * high_quality_degradation) as u32;
-    let mid_to_low = (quality_summary.average_quality.0 as f32 * degradation_pct) as u32;
-
-    quality_summary.high_quality.0 -= high_to_mid;
-    quality_summary.average_quality.0 += high_to_mid;
-    quality_summary.average_quality.0 -= mid_to_low;
-    quality_summary.low_quality.0 += mid_to_low;
 }

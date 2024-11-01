@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::commodity::{Commodity, Quality, Quantity};
+use crate::commodities::{Commodity, Quality, Quantity};
 
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(
