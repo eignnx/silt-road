@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use enum_iterator::Sequence;
 
+use crate::commodities::dollars_2024_to_dollars_1849;
+
 pub(super) fn plugin(app: &mut App) {
     app.register_type::<Commodity>();
 
@@ -84,8 +86,7 @@ impl Commodity {
             Gold => 1.704e6,            // price per 1000cm^3
         };
 
-        // See: https://www.officialdata.org/us/inflation/2024?endYear=1849&amount=100
-        dollars_2024 * 2.44 / 100.0
+        dollars_2024_to_dollars_1849(dollars_2024)
     }
 }
 
