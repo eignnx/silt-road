@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, window::WindowResolution};
 
 #[cfg(feature = "dev")]
 mod dev_tools;
@@ -9,9 +9,12 @@ mod helpers;
 #[allow(unused)]
 mod terrain;
 
+mod caravan;
+mod character;
 mod inventory;
 mod screens;
 mod theme;
+mod trade_resources;
 
 pub fn plugin(app: &mut App) {
     app.add_plugins(
@@ -19,8 +22,12 @@ pub fn plugin(app: &mut App) {
             .set(WindowPlugin {
                 primary_window: Some(Window {
                     title: String::from("Silt Road"),
+                    skip_taskbar: true,
+                    resizable: true,
+                    resolution: WindowResolution::new(640.0, 360.0),
                     ..Default::default()
                 }),
+
                 ..default()
             })
             .set(ImagePlugin::default_nearest()),
@@ -28,9 +35,12 @@ pub fn plugin(app: &mut App) {
 
     app.add_plugins((
         // terrain::plugin,
+        caravan::plugin,
+        character::plugin,
         inventory::plugin,
         screens::plugin,
         theme::plugin,
+        trade_resources::plugin,
     ));
 
     app.add_systems(Startup, startup);

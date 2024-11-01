@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::trade_resources::{Quality, Quantity, TradeResource};
+
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(
         Startup,
@@ -12,57 +14,6 @@ pub struct PlayerInventory;
 
 #[derive(Component)]
 pub struct MarketInventory;
-
-#[derive(Component, Debug, Clone, Copy, Reflect)]
-pub enum TradeResource {
-    Grain,
-    Flour,
-    Spirits,
-    Wine,
-    Sugar,
-    Salt,
-    SaltedMeat,
-    Potatos,
-    Cheese,
-    Lumber,
-    Tools,
-    Ammunition,
-    Firearms,
-    Fabric,
-    Wool,
-    Clothing,
-    Iron,
-    Copper,
-    Nickle,
-    Gold,
-}
-
-impl TradeResource {
-    pub fn units(&self) -> &'static str {
-        use TradeResource::*;
-
-        match self {
-            Sugar | Salt | SaltedMeat | Potatos | Flour | Grain => "lbs",
-            Cheese => "wheels",
-            Spirits | Wine => "casks",
-            Ammunition => "rounds",
-            Firearms | Tools | Clothing => "pieces",
-            Wool => "skeins",
-            Iron | Copper | Nickle | Gold => "ingots",
-            Lumber => "board-feet", // See: https://ekvintagewood.com/about-ek-vintage-reclaimed-wood/units-of-measure-glossary/
-            Fabric => "yards",
-        }
-    }
-}
-
-#[derive(Component)]
-pub struct Quantity(pub u32);
-
-#[derive(Component)]
-pub enum Quality {
-    Low,
-    High,
-}
 
 fn spawn_player_inventory(mut commands: Commands) {
     commands.spawn((PlayerInventory, TradeResource::Lumber, Quantity(45)));

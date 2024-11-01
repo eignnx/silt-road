@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use bevy::prelude::*;
 
 pub const BUTTON_HOVERED_BACKGROUND: Color = Color::srgb(0.186, 0.328, 0.573);

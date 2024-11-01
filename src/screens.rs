@@ -1,11 +1,12 @@
 use bevy::prelude::*;
 
 use crate::{
-    inventory::{PlayerInventory, Quality, Quantity, TradeResource},
+    inventory::PlayerInventory,
     theme::{
         interaction::OnPress,
         widgets::{Containers, Widgets},
     },
+    trade_resources::{Quality, Quantity, TradeResource},
 };
 
 pub(super) fn plugin(app: &mut App) {
