@@ -9,7 +9,7 @@ pub(super) fn plugin(app: &mut App) {
     use crate::screens::AppState;
 
     app.add_plugins((
-        WorldInspectorPlugin::new().run_if(input_toggle_active(false, KeyCode::Backquote)),
+        WorldInspectorPlugin::new().run_if(input_toggle_active(true, KeyCode::Backquote)),
         LogDiagnosticsPlugin::default(),
         // FrameTimeDiagnosticsPlugin,
     ));
