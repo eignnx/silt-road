@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 
 use crate::{
+    commodity::{Commodity, Quality, Quantity},
     inventory::PlayerInventory,
     theme::{
         interaction::OnPress,
         widgets::{Containers, Widgets},
     },
-    trade_resources::{Quality, Quantity, TradeResource},
 };
 
 pub(super) fn plugin(app: &mut App) {
@@ -35,7 +35,7 @@ pub struct ActiveMenu {
 
 fn spawn_player_inventory_ui(
     mut commands: Commands,
-    q_player_inventory: Query<(&TradeResource, &Quantity, Option<&Quality>), With<PlayerInventory>>,
+    q_player_inventory: Query<(&Commodity, &Quantity, Option<&Quality>), With<PlayerInventory>>,
 ) {
     let menu_entity = commands
         .ui_root()
