@@ -7,7 +7,7 @@ use crate::{character::SpawnRandomCharacter, commodities::dollars_2024_to_dollar
 pub(super) fn plugin(app: &mut App) {
     app.register_type::<Wagon>();
     app.register_type::<Team>();
-    app.register_type::<DraughtAnimal>();
+    app.register_type::<DraftAnimal>();
     app.add_systems(Startup, spawn_test_caravan);
     app.add_systems(Startup, dbg_print_draught_animal_prices);
 }
@@ -45,7 +45,7 @@ pub enum Team {
 }
 
 impl Team {
-    pub fn team_horsepower(&self, q_draught_animal: Query<&DraughtAnimal>) -> f32 {
+    pub fn team_horsepower(&self, q_draught_animal: Query<&DraftAnimal>) -> f32 {
         match self {
             Team::Single(animal) => q_draught_animal.get(*animal).unwrap().base_horsepower(),
             Team::Yoke(animals) => {
@@ -62,7 +62,7 @@ impl Team {
         }
     }
 
-    pub fn team_speed(&self, load_weight: f32, q_draught_animal: Query<&DraughtAnimal>) -> f32 {
+    pub fn team_speed(&self, load_weight: f32, q_draught_animal: Query<&DraftAnimal>) -> f32 {
         let horsepower = self.team_horsepower(q_draught_animal);
         horsepower / load_weight
     }
@@ -71,41 +71,41 @@ impl Team {
 #[derive(Component, Reflect, Debug, enum_iterator::Sequence)]
 #[reflect(Component)]
 /// An animal that pulls a wagon.
-pub enum DraughtAnimal {
+pub enum DraftAnimal {
     Horse,
     Ox,
     Mule,
 }
 
-impl DraughtAnimal {
+impl DraftAnimal {
     pub fn haul_speed_mph(&self) -> f32 {
         match self {
-            DraughtAnimal::Horse => 12.5,
-            DraughtAnimal::Ox => 7.5,
-            DraughtAnimal::Mule => 10.0,
+            DraftAnimal::Horse => 12.5,
+            DraftAnimal::Ox => 7.5,
+            DraftAnimal::Mule => 10.0,
         }
     }
 
     pub fn base_horsepower(&self) -> f32 {
         match self {
-            DraughtAnimal::Horse => 1.0,
-            DraughtAnimal::Ox => 2.5,
-            DraughtAnimal::Mule => 0.70,
+            DraftAnimal::Horse => 1.0,
+            DraftAnimal::Ox => 2.5,
+            DraftAnimal::Mule => 0.70,
         }
     }
 
     pub fn base_price(&self) -> f32 {
         let price_dollars_2024 = match self {
-            DraughtAnimal::Horse => 3000.00,
-            DraughtAnimal::Ox => 1700.00,
-            DraughtAnimal::Mule => 850.00,
+            DraftAnimal::Horse => 3000.00,
+            DraftAnimal::Ox => 1700.00,
+            DraftAnimal::Mule => 850.00,
         };
 
         dollars_2024_to_dollars_1849(price_dollars_2024)
     }
 
     pub fn yoke_unity(&self, other: &Self) -> f32 {
-        use DraughtAnimal::*;
+        use DraftAnimal::*;
 
         match (self, other) {
             (Horse, Horse) | (Ox, Ox) | (Mule, Mule) => 1.0,
@@ -117,7 +117,7 @@ impl DraughtAnimal {
 }
 
 fn dbg_print_draught_animal_prices() {
-    for animal in enum_iterator::all::<DraughtAnimal>() {
+    for animal in enum_iterator::all::<DraftAnimal>() {
         println!(
             "DRAUGHT_ANIMAL: One {:?} costs ${:.2}",
             animal,
@@ -133,15 +133,15 @@ fn spawn_test_caravan(mut commands: Commands) {
         });
     }
 
-    let horse1 = commands.spawn(DraughtAnimal::Horse).id();
-    let horse2 = commands.spawn(DraughtAnimal::Horse).id();
+    let horse1 = commands.spawn(DraftAnimal::Horse).id();
+    let horse2 = commands.spawn(DraftAnimal::Horse).id();
     commands
         .spawn((InPlayerCaravan, Wagon::Conestoga))
         .with_children(|parent| {
             parent.spawn(Team::Yoke(vec![(horse1, horse2)]));
         });
 
-    let mule1 = commands.spawn(DraughtAnimal::Mule).id();
+    let mule1 = commands.spawn(DraftAnimal::Mule).id();
     commands
         .spawn((InPlayerCaravan, Wagon::ChuckWagon))
         .with_children(|parent| {
