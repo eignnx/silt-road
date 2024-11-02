@@ -17,7 +17,19 @@ pub(super) fn plugin(app: &mut App) {
     });
 }
 
-#[derive(Component, Debug, Clone, Copy, Reflect, Sequence)]
+#[derive(
+    Component,
+    Debug,
+    Clone,
+    Copy,
+    Reflect,
+    enum_iterator::Sequence,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+)]
 #[reflect(Component)]
 pub enum Commodity {
     Grain,
@@ -38,8 +50,9 @@ pub enum Commodity {
     Clothing,
     Iron,
     Copper,
-    Nickle,
+    Nickel,
     Gold,
+    Coal,
 }
 
 impl Commodity {
@@ -53,7 +66,8 @@ impl Commodity {
             Ammunition => "round",
             Firearms | Tools | Clothing => "piece",
             Wool => "skein",
-            Iron | Copper | Nickle | Gold => "ingot",
+            Iron | Copper | Nickel | Gold => "ingot",
+            Coal => "ton",
             Lumber => "board-foot", // See: https://ekvintagewood.com/about-ek-vintage-reclaimed-wood/units-of-measure-glossary/
             Fabric => "yard",
         }
@@ -82,8 +96,9 @@ impl Commodity {
             Clothing => 30.0,           // Estimate of price of a shirt.
             Iron => 0.23,               // price per 1000cm^3
             Copper => 80.,              // price per 1000cm^3
-            Nickle => 203.,             // price per 1000cm^3
+            Nickel => 203.,             // price per 1000cm^3
             Gold => 1.704e6,            // price per 1000cm^3
+            Coal => 118.70,             // price per ton
         };
 
         dollars_2024_to_dollars_1849(dollars_2024)

@@ -15,6 +15,7 @@ mod commodities;
 mod inventory;
 mod screens;
 mod theme;
+mod town;
 
 pub fn plugin(app: &mut App) {
     app.add_plugins(
@@ -41,6 +42,7 @@ pub fn plugin(app: &mut App) {
         screens::plugin,
         theme::plugin,
         commodities::plugin,
+        town::plugin,
     ));
 
     app.add_systems(Startup, startup);

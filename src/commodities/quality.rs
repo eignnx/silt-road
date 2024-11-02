@@ -62,7 +62,7 @@ impl Quality {
             Clothing | Firearms => OneOfAKind,
             Cheese | Fabric => Artisinal,
             Ammunition | Wool | Grain | Sugar | Salt | Flour | Potatos | Lumber | Iron | Copper
-            | Nickle | Gold => ExtremelyStableValue,
+            | Nickel | Gold | Coal => ExtremelyStableValue,
         };
 
         enum LowQualityClass {
@@ -75,7 +75,7 @@ impl Quality {
         use LowQualityClass::*;
 
         let low_quality_class = match comm {
-            Copper | Nickle | Gold | Ammunition | Grain | Flour | Sugar | Salt | Wool => {
+            Copper | Nickel | Gold | Coal | Ammunition | Grain | Flour | Sugar | Salt | Wool => {
                 NonDegradable
             }
             SaltedMeat | Cheese | Potatos => Perishable,

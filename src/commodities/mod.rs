@@ -11,7 +11,7 @@ pub(super) fn plugin(app: &mut App) {
     app.add_plugins(quality::plugin);
 }
 
-#[derive(Component, Reflect, Debug, Clone, Copy)]
+#[derive(Component, Reflect, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[reflect(Component)]
 pub struct Quantity(pub u32);
 
