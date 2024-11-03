@@ -47,12 +47,12 @@ impl Town {
 
 fn spawn_test_town(mut commands: Commands) {
     let town = Town {
-        name: "Exampliburg".to_string(),
+        name: "Quake City".to_string(),
         population: 18_000,
         accessability: 0.50,
     };
     commands
-        .spawn((Name::new("Exampliburg"), town.clone()))
+        .spawn((Name::new(town.name.clone()), town.clone()))
         .with_children(|parent| {
             for business_type in enum_iterator::all::<Business>() {
                 let rarity = town.business_rarity(&business_type);
