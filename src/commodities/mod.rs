@@ -17,5 +17,6 @@ pub struct Quantity(pub u32);
 
 pub fn dollars_2024_to_dollars_1849(dollars_2024: f32) -> f32 {
     // See: https://www.officialdata.org/us/inflation/2024?endYear=1849&amount=100
+    // dollars_2024 = dollars_1849 * 100 / 2.44
     dollars_2024 * 2.44 / 100.0
 }

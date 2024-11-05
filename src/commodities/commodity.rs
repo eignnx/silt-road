@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use serde::Deserialize;
 
 use crate::commodities::dollars_2024_to_dollars_1849;
 
@@ -22,7 +23,9 @@ pub(super) fn plugin(app: &mut App) {
     Clone,
     Copy,
     Reflect,
+    Default,
     enum_iterator::Sequence,
+    Deserialize,
     PartialEq,
     Eq,
     PartialOrd,
@@ -31,6 +34,7 @@ pub(super) fn plugin(app: &mut App) {
 )]
 #[reflect(Component)]
 pub enum Commodity {
+    #[default]
     Grain,
     Flour,
     Spirits,

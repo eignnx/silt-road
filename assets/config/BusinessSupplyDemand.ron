@@ -1,0 +1,87 @@
+BusinessSupplyDemandSettings(
+    supplies_demands: {
+            WagonShop: SuppliesDemands(
+                demands: [Lumber, Iron],
+                supplies: [],
+            ),
+            LivestockAuction: SuppliesDemands(
+                demands: [Grain],
+                supplies: [],
+            ),
+            Warehouse: SuppliesDemands(
+                demands: [],
+                supplies: [],
+            ),
+            Refinery: SuppliesDemands(
+                demands: [Tools, Coal],
+                supplies: [Iron, Nickel, Copper],
+            ),
+            LumberMill: SuppliesDemands(
+                demands: [Tools],
+                supplies: [Lumber],
+            ),
+            Tavern: SuppliesDemands(
+                demands: [Wine, Spirits, Cheese, SaltedMeat],
+                supplies: [],
+            ),
+            CoalMine: SuppliesDemands(
+                demands: [Tools],
+                supplies: [Coal],
+            ),
+            IronMine: SuppliesDemands(
+                demands: [Tools],
+                supplies: [Iron],
+            ),
+            CopperMine: SuppliesDemands(
+                demands: [Tools],
+                supplies: [Copper],
+            ),
+            NickelMine: SuppliesDemands(
+                demands: [Tools],
+                supplies: [Nickel],
+            ),
+            GoldMine: SuppliesDemands(
+                demands: [Tools],
+                supplies: [Gold],
+            ),
+            Blacksmith: SuppliesDemands(
+                demands: [Iron],
+                supplies: [Tools],
+            ),
+            Weaver: SuppliesDemands(
+                demands: [Wool],
+                supplies: [Fabric],
+            ),
+            Tailor: SuppliesDemands(
+                demands: [Fabric],
+                supplies: [Clothing],
+            ),
+            Farm: SuppliesDemands(
+                demands: [Tools],
+                supplies: [Grain, Potatos],
+            ),
+            Mill: SuppliesDemands(
+                demands: [Grain],
+                supplies: [Flour],
+            ),
+            Brewery: SuppliesDemands(
+                demands: [Grain, Potatos],
+                supplies: [Spirits],
+            ),
+            Winery: SuppliesDemands(
+                demands: [],
+                supplies: [Wine, Cheese],
+            ),
+            Butcher: SuppliesDemands(
+                demands: [Salt],
+                supplies: [SaltedMeat],
+            ),
+            TrainStation: SuppliesDemands(
+                demands: [Coal],
+                supplies: [
+                    Salt, Sugar, Cheese, SaltedMeat, Ammunition, Firearms, Tools, Clothing, Lumber,
+                    Wine,
+                ],
+            ),
+    }
+)

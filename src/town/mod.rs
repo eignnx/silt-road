@@ -1,11 +1,18 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::HashMap};
+use bevy_easy_config::EasyConfigPlugin;
 use rand::Rng;
+use serde::Deserialize;
 
 use crate::commodities::Commodity;
 
 pub(super) fn plugin(app: &mut App) {
     app.register_type::<Town>();
     app.register_type::<Business>();
+    app.register_type::<BusinessSupplyDemandSettings>();
+    app.register_type::<SuppliesDemands>();
+    app.add_plugins(EasyConfigPlugin::<BusinessSupplyDemandSettings>::new(
+        "config/BusinessSupplyDemand.ron",
+    ));
     app.add_systems(Startup, spawn_test_town);
 }
 
@@ -63,7 +70,18 @@ fn spawn_test_town(mut commands: Commands) {
         });
 }
 
-#[derive(Component, Reflect, Debug, enum_iterator::Sequence)]
+#[derive(
+    Component,
+    Reflect,
+    Debug,
+    enum_iterator::Sequence,
+    Deserialize,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+)]
 #[reflect(Component)]
 pub enum Business {
     WagonShop,
@@ -90,99 +108,24 @@ pub enum Business {
     TrainStation,
 }
 
-pub struct ConsumesProduces {
-    pub consumes: Vec<Commodity>,
-    pub produces: Vec<Commodity>,
+#[derive(Asset, Resource, Reflect, Deserialize, Debug, Clone)]
+#[reflect(Resource)]
+pub struct BusinessSupplyDemandSettings {
+    supplies_demands: HashMap<Business, SuppliesDemands>,
 }
 
-impl Business {
-    pub fn commodities_consumed(&self) -> ConsumesProduces {
-        use Business::*;
-        use Commodity::*;
-        match self {
-            WagonShop => ConsumesProduces {
-                consumes: vec![Lumber, Iron],
-                produces: vec![],
-            },
-            LivestockAuction => ConsumesProduces {
-                consumes: vec![Grain],
-                produces: vec![],
-            },
-            Warehouse => ConsumesProduces {
-                consumes: vec![],
-                produces: vec![],
-            },
-            Refinery => ConsumesProduces {
-                consumes: vec![],
-                produces: vec![Iron, Nickel, Copper],
-            },
-            LumberMill => ConsumesProduces {
-                consumes: vec![Tools],
-                produces: vec![Lumber],
-            },
-            Tavern => ConsumesProduces {
-                consumes: vec![Wine, Spirits, Cheese, SaltedMeat],
-                produces: vec![],
-            },
-            CoalMine => ConsumesProduces {
-                consumes: vec![Tools],
-                produces: vec![Coal],
-            },
-            IronMine => ConsumesProduces {
-                consumes: vec![Tools],
-                produces: vec![Iron],
-            },
-            CopperMine => ConsumesProduces {
-                consumes: vec![Tools],
-                produces: vec![Copper],
-            },
-            NickelMine => ConsumesProduces {
-                consumes: vec![Tools],
-                produces: vec![Nickel],
-            },
-            GoldMine => ConsumesProduces {
-                consumes: vec![Tools],
-                produces: vec![Gold],
-            },
-            Blacksmith => ConsumesProduces {
-                consumes: vec![Iron],
-                produces: vec![Tools],
-            },
-            Weaver => ConsumesProduces {
-                consumes: vec![Wool],
-                produces: vec![Fabric],
-            },
-            Tailor => ConsumesProduces {
-                consumes: vec![Fabric],
-                produces: vec![Clothing],
-            },
-            Farm => ConsumesProduces {
-                consumes: vec![Tools],
-                produces: vec![Grain, Potatos],
-            },
-            Mill => ConsumesProduces {
-                consumes: vec![Grain],
-                produces: vec![Flour],
-            },
-            Brewery => ConsumesProduces {
-                consumes: vec![Grain, Potatos],
-                produces: vec![Spirits],
-            },
-            Winery => ConsumesProduces {
-                consumes: vec![],
-                produces: vec![Wine, Cheese],
-            },
-            Butcher => ConsumesProduces {
-                consumes: vec![Salt],
-                produces: vec![SaltedMeat],
-            },
-            TrainStation => ConsumesProduces {
-                consumes: vec![Coal],
-                produces: vec![
-                    Salt, Sugar, Cheese, SaltedMeat, Ammunition, Firearms, Tools, Clothing, Lumber,
-                    Wine,
-                ],
-            },
+impl Default for BusinessSupplyDemandSettings {
+    fn default() -> Self {
+        Self {
+            supplies_demands: enum_iterator::all::<Business>()
+                .map(|business| (business, SuppliesDemands::default()))
+                .collect(),
         }
     }
+}
+
+#[derive(Reflect, Debug, Deserialize, Default, Clone)]
+pub struct SuppliesDemands {
+    pub demands: Vec<Commodity>,
+    pub supplies: Vec<Commodity>,
 }
