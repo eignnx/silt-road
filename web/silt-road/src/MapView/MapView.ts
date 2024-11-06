@@ -25,13 +25,14 @@ export function plugin(k0: KAPLAYCtx) {
             return k.get("town").find(town => town.idx === playerMapMarker.idx);
         }
 
-        currentTown()?.toggleHighlight();
+        currentTown()?.addHighlight();
         playerMapMarker.pos = currentTown()?.pos || k.center();
 
         k.onClick("town", newDest => {
             if (newDest.idx === playerMapMarker.idx) return;
 
-            currentTown()?.toggleHighlight();
+            // Remove highlight from town we're leaving
+            currentTown()?.removeHighlight();
 
             playerMapMarker.unuse("townIdx");
             playerMapMarker.use("travelling");
@@ -50,7 +51,7 @@ export function plugin(k0: KAPLAYCtx) {
             traveller.pos = dest.pos;
 
             dest.unuse("destination");
-            dest.toggleHighlight();
+            dest.addHighlight();
         });
     });
 
