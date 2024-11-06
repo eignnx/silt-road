@@ -31,8 +31,16 @@ kaplay({
     }
 });
 
+layers(["player", "towns", "ui"], "ui");
+
 scene("mapView", () => {
-    layers(["player", "towns", "ui"], "ui");
+
+    onHover("button", btn => {
+        btn.color = GREEN;
+    });
+    onHoverEnd("button", btn => {
+        btn.color = BLACK;
+    });
 
     setBackground(hsl2rgb(45 / 360, 0.35, 0.70));
 
@@ -101,7 +109,44 @@ scene("mapView", () => {
         dest.unuse("destination");
         dest.addHighlight();
     });
+
+
+    const enterTownBtn = addButton("Enter Town", {
+        tag: "enterTownBtn",
+        anchor: "botright",
+        pos: pos(width(), height() - 20)
+    });
+
+
+    onClick("enterTownBtn", () => {
+        go("inTown");
+    });
 });
+
+function addButton(txt: string, { tag, anchor: anch, pos: position }): GameObj<any> {
+    const w = 24 * txt.length + 10;
+    const btn = add([
+        tag,
+        "button",
+        anchor(anch),
+        area(),
+        position,
+        color(BLACK),
+        rect(w, 60),
+        outline(5, WHITE),
+        layer("ui"),
+        fixed(),
+    ]).add([
+        color(WHITE),
+        text(txt, { width: w, align: "center" }),
+        anchor(anch),
+        fixed(),
+    ]);
+
+    return btn;
+}
+
+
 
 export function spawnTown(idx: number): GameObj<any> {
     const townName = randomTownName();
@@ -184,6 +229,31 @@ export function townIdx(idx: number) {
         }
     };
 }
+
+scene("inTown", () => {
+    onHover("button", btn => {
+        btn.color = GREEN;
+    });
+    onHoverEnd("button", btn => {
+        btn.color = BLACK;
+    });
+
+    addButton("Map", {
+        tag: "goToMapView",
+        anchor: "botright",
+        pos: pos(width(), height() - 20)
+    });
+
+    onClick("goToMapView", () => {
+        go("mapView");
+    });
+
+    add([
+        text("In Town"),
+        anchor("top"),
+        pos(width() / 2, 50),
+    ]);
+});
 
 const COMMODITY_KINDS = [
     "grain",
