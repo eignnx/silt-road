@@ -32,6 +32,17 @@ kaplay({
 });
 
 layers(["player", "towns", "ui"], "ui");
+setBackground(hsl2rgb(45 / 360, 0.35, 0.70));
+
+const TOWNS: { name: string, position: Comp; }[] = [];
+for (let i = 0; i < 10; i++) {
+    TOWNS.push({
+        name: randomTownName(),
+        position: pos(randi(width()), randi(height()))
+    });
+}
+
+let PLAYER_TOWN_IDX = 0;
 
 scene("mapView", () => {
 
@@ -42,7 +53,9 @@ scene("mapView", () => {
         btn.color = BLACK;
     });
 
-    setBackground(hsl2rgb(45 / 360, 0.35, 0.70));
+    TOWNS.forEach((town, idx) => {
+        addTownMapMarker(idx, town.name, town.position);
+    });
 
     const CAM_PAN_SPEED = 5;
     const CAM_ZOOM_SPEED = 0.01;
@@ -57,13 +70,9 @@ scene("mapView", () => {
         camPos(camPos().add(disp.scale(CAM_PAN_SPEED)));
     });
 
-    for (let i = 0; i < 10; i++) {
-        spawnTown(i);
-    }
-
     const playerMapMarker = add([
         "playerMapMarker",
-        townIdx(0),
+        townIdx(PLAYER_TOWN_IDX),
         pos(0, 0), // default
         circle(10),
         color(hsl2rgb(0, 1, 1)),
@@ -108,6 +117,7 @@ scene("mapView", () => {
 
         dest.unuse("destination");
         dest.addHighlight();
+        PLAYER_TOWN_IDX = dest.idx;
     });
 
 
@@ -119,7 +129,10 @@ scene("mapView", () => {
 
 
     onClick("enterTownBtn", () => {
-        go("inTown");
+        const t = currentTown();
+        if (t) {
+            go("inTown", t.name);
+        }
     });
 });
 
@@ -148,14 +161,14 @@ function addButton(txt: string, { tag, anchor: anch, pos: position }): GameObj<a
 
 
 
-export function spawnTown(idx: number): GameObj<any> {
-    const townName = randomTownName();
+function addTownMapMarker(idx: number, townName: string, position): GameObj<any> {
+    // const townName = randomTownName();
     const FONT_SIZE = 30;
     return add([
         "town",
         named(`Town: ${townName}`),
         townIdx(idx),
-        pos(rand(width()), rand(height())),
+        position,
         circle(16),
         color(
             randi(50, 200),
@@ -230,7 +243,7 @@ export function townIdx(idx: number) {
     };
 }
 
-scene("inTown", () => {
+scene("inTown", (townName) => {
     onHover("button", btn => {
         btn.color = GREEN;
     });
@@ -249,9 +262,13 @@ scene("inTown", () => {
     });
 
     add([
-        text("In Town"),
+        text("The town of", { size: 30 }),
         anchor("top"),
         pos(width() / 2, 50),
+    ]).add([
+        text(townName, { size: 60 }),
+        anchor("top"),
+        pos(0, 50),
     ]);
 });
 
@@ -278,4 +295,5 @@ export function commodity(kindOpt?: CommodityKind): Commodity {
 }
 
 
-go("mapView");
+// go("mapView", PLAYER_TOWN_IDX);
+go("inTown", TOWNS[0].name);
