@@ -1,11 +1,11 @@
-import kaplay, { Vec2, GameObj, Comp } from "kaplay";
+import kaplay, { Vec2, GameObj, Comp, Color, PosComp } from "kaplay";
 import "kaplay/global";
 import { camScaleUnaffected } from './Utils';
 import { randomTownName } from './TownNames';
 
 kaplay({
     global: true,
-    font: "sans-serif",
+    font: "Georgia",
     letterbox: true,
     width: 1920,
     height: 1080,
@@ -34,24 +34,55 @@ kaplay({
 layers(["player", "towns", "ui"], "ui");
 setBackground(hsl2rgb(45 / 360, 0.35, 0.70));
 
-const TOWNS: { name: string, position: Comp; }[] = [];
+const DARK_BROWN: Color = hsl2rgb(30 / 360, 0.85, 0.1);
+const BROWN: Color = hsl2rgb(30 / 360, 0.85, 0.2);
+
+interface Town {
+    name: string;
+    position: PosComp;
+    businesses: [string, PosComp][];
+}
+
+const TOWNS: Town[] = [];
 for (let i = 0; i < 10; i++) {
     TOWNS.push({
         name: randomTownName(),
-        position: pos(randi(width()), randi(height()))
+        position: pos(randi(width()), randi(height())),
+        businesses: [
+            ["Wagon Shop", pos(center())],
+            ["Market", pos(center().sub(300, 0))],
+        ]
     });
 }
 
-let PLAYER_TOWN_IDX = 0;
+type Inventory = {
+    [K in CommodityKind]?: number;
+};
 
-scene("mapView", () => {
+interface PlayerGlobals {
+    townIdx: number;
+    inventory: Inventory;
+}
 
+const PLAYER: PlayerGlobals = {
+    townIdx: 0,
+    inventory: {
+        "feed": 123,
+        "grain": 4300,
+    }
+};
+
+function setupBtnHovers() {
     onHover("button", btn => {
-        btn.color = GREEN;
+        btn.color = BROWN;
     });
     onHoverEnd("button", btn => {
-        btn.color = BLACK;
+        btn.color = DARK_BROWN;
     });
+}
+
+scene("mapView", () => {
+    setupBtnHovers();
 
     TOWNS.forEach((town, idx) => {
         addTownMapMarker(idx, town.name, town.position);
@@ -72,7 +103,7 @@ scene("mapView", () => {
 
     const playerMapMarker = add([
         "playerMapMarker",
-        townIdx(PLAYER_TOWN_IDX),
+        townIdx(PLAYER.townIdx),
         pos(0, 0), // default
         circle(10),
         color(hsl2rgb(0, 1, 1)),
@@ -117,7 +148,7 @@ scene("mapView", () => {
 
         dest.unuse("destination");
         dest.addHighlight();
-        PLAYER_TOWN_IDX = dest.idx;
+        PLAYER.townIdx = dest.idx;
     });
 
 
@@ -131,7 +162,7 @@ scene("mapView", () => {
     onClick("enterTownBtn", () => {
         const t = currentTown();
         if (t) {
-            go("inTown", t.name);
+            go("inTown", t.idx);
         }
     });
 });
@@ -146,7 +177,7 @@ function addButton(txt: string, { tag, anchor: anch, pos: position }): GameObj<a
         position,
         color(BLACK),
         rect(w, 60),
-        outline(5, WHITE),
+        outline(8, BLACK),
         layer("ui"),
         fixed(),
     ]).add([
@@ -166,7 +197,7 @@ function addTownMapMarker(idx: number, townName: string, position): GameObj<any>
     const FONT_SIZE = 30;
     return add([
         "town",
-        named(`Town: ${townName}`),
+        named(townName),
         townIdx(idx),
         position,
         circle(16),
@@ -187,6 +218,7 @@ function addTownMapMarker(idx: number, townName: string, position): GameObj<any>
             size: FONT_SIZE,
             align: "center",
         }),
+        color(DARK_BROWN),
         anchor(vec2(0, 4)),
         layer("ui"),
     ]);
@@ -243,13 +275,10 @@ export function townIdx(idx: number) {
     };
 }
 
-scene("inTown", (townName) => {
-    onHover("button", btn => {
-        btn.color = GREEN;
-    });
-    onHoverEnd("button", btn => {
-        btn.color = BLACK;
-    });
+scene("inTown", (townIdx) => {
+    const town = TOWNS[townIdx];
+
+    setupBtnHovers();
 
     addButton("Map", {
         tag: "goToMapView",
@@ -263,37 +292,102 @@ scene("inTown", (townName) => {
 
     add([
         text("The town of", { size: 30 }),
+        color(DARK_BROWN),
         anchor("top"),
         pos(width() / 2, 50),
     ]).add([
-        text(townName, { size: 60 }),
+        text(town.name, { size: 60 }),
+        color(DARK_BROWN),
         anchor("top"),
         pos(0, 50),
     ]);
+
+    // SPAWN BUSINESSES
+    town.businesses.forEach(([name, position], businessIdx) => {
+        const w = 200;
+        add([
+            "businessMarker",
+            named(name),
+            rect(w, 120),
+            color(BROWN),
+            position,
+            area(),
+            outline(5, BLACK),
+            anchor("center"),
+        ]).add([
+            text(name, { width: w, align: "center" }),
+            color(WHITE),
+            anchor("center"),
+        ]);
+    });
+
+    onHover("businessMarker", business => {
+        business.color = lerp(BROWN, WHITE, 0.05);
+    });
+
+    onHoverEnd("businessMarker", business => {
+        business.color = BROWN;
+    });
+
+    onClick("businessMarker", business => {
+        go("businessMenu", business.name);
+    });
 });
 
-const COMMODITY_KINDS = [
-    "grain",
-    "flour",
-    "feed",
-    "tools",
-];
+scene("businessMenu", businessName => {
+    setupBtnHovers();
+    // Menu Background
+    add([
+        rect(width() * 0.9, height() * 0.9),
+        color(DARK_BROWN),
+        anchor("center"),
+        pos(center()),
+        outline(25, BLACK, 1.0, "round"),
+        layer("background"),
+    ]);
 
-type CommodityKind = typeof COMMODITY_KINDS[number];
+    addButton("X", {
+        tag: "exitMenuBtn",
+        anchor: "topright",
+        pos: pos(width() * 0.95, height() * 0.05)
+    });
+
+    onClick("exitMenuBtn", () => {
+        go("inTown", PLAYER.townIdx);
+    });
+
+    add([
+        text(businessName, { align: "center", }),
+        scale(2),
+        pos(width() / 2, height() * 0.1),
+        anchor("center"),
+    ]);
+
+    if (businessName === "Market") {
+
+        let position = vec2(width() * 0.15, height() * 0.15);
+        for (const comm in PLAYER.inventory) {
+            add([
+                text(comm, { size: 24, width: width() * 0.8, align: "left" }),
+                anchor("left"),
+                pos(position),
+            ]);
+            position = position.add(0, 20);
+        }
+    } else {
+        debug.log(`Business '${businessName}' not implemented!`);
+        go("inTown", PLAYER.townIdx);
+    }
+});
+
+type CommodityKind = "grain" | "flour" | "feed" | "tools";
 
 interface Commodity extends Comp {
     id: "commodity";
     kind: CommodityKind;
 }
 
-export function commodity(kindOpt?: CommodityKind): Commodity {
-    let kind: CommodityKind = kindOpt || choose(COMMODITY_KINDS);
-    return {
-        id: "commodity",
-        kind,
-    };
-}
-
 
 // go("mapView", PLAYER_TOWN_IDX);
-go("inTown", TOWNS[0].name);
+// go("inTown", 0);
+go("businessMenu", "Market");
