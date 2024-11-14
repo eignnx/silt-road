@@ -1,4 +1,5 @@
-import { DARK_BROWN, PLAYER } from '../Globals';
+import { PosComp, Vec2 } from 'kaplay';
+import { DARK_BROWN, Inventory, PLAYER, TOWNS } from '../Globals';
 import { addButton, setupBtnHovers } from '../utils/Button';
 
 scene("businessMenu", businessName => {
@@ -33,36 +34,71 @@ scene("businessMenu", businessName => {
 
     if (businessName === "Market") {
 
-        add([
-            text("Your Cargo", { size: 28, align: "center" }),
-            anchor("center"),
-            pos(width() / 4, height() * 0.2),
-        ]);
-
-        let position = vec2(width() * 0.15, height() * 0.35);
-        const rowOpts = { size: 24, width: width() * 0.7 };
-        for (const comm in PLAYER.inventory) {
-
-            const qty: string = PLAYER.inventory[comm].toString();
-            const txt = comm.padEnd(20, ".") + qty.padStart(10, ".");
-
+        function addInventoryDisplay(
+            position: Vec2,
+            title: string,
+            inventory: Inventory,
+            widthChars: number
+        ) {
             add([
-                uiRow(),
-                text(txt, { align: "left", ...rowOpts }),
-                area(),
+                text(title, { size: 28, align: "center" }),
                 anchor("left"),
                 pos(position),
             ]);
 
-            position = position.add(0, 25);
+            position = position.add(0, 35);
+
+
+            for (const comm in inventory) {
+                const qty: string = inventory[comm].toString();
+                const txt = comm.padEnd(widthChars / 2, ".") + qty.padStart(widthChars / 2, ".");
+
+                const txtObj = add([
+                    uiRow(),
+                    text(txt, {
+                        size: 20,
+                        align: "left",
+                        font: "monospace"
+                    }),
+                    area(),
+                    anchor("left"),
+                    pos(position),
+                ]);
+
+                addButton("buy", {
+                    tag: "buy",
+                    anchor: "left",
+                    pos: pos(position.add(txtObj.width + 10, 0)),
+                    fontSize: 18,
+                });
+
+                addButton("sell", {
+                    tag: "sell",
+                    anchor: "left",
+                    pos: pos(position.add(txtObj.width + 55, 0)),
+                    fontSize: 18,
+                });
+
+                position = position.add(0, 35);
+            }
         }
 
+        const widthChars = 16;
 
-        add([
-            text("Market Wares", { size: 28, align: "center" }),
-            anchor("center"),
-            pos(3 * width() / 4, height() * 0.2),
-        ]);
+        addInventoryDisplay(
+            vec2(width() * 0.10, height() * 0.3),
+            "Your Cargo",
+            PLAYER.inventory,
+            widthChars,
+        );
+
+
+        addInventoryDisplay(
+            vec2(width() * 0.55, height() * 0.3),
+            "Market Wares",
+            TOWNS[PLAYER.townIdx].marketInventory,
+            widthChars,
+        );
 
 
     } else {

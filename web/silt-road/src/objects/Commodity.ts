@@ -1,6 +1,12 @@
 import { Comp } from 'kaplay';
 
-export type CommodityKind = "grain" | "flour" | "feed" | "tools";
+
+export const ALL_COMMODITIES = [
+    "grain", "flour", "feed", "tools", "ammunition", "firearms", "iron ore",
+    "textiles", "clothing", "wool", "salt", "cheese"
+] as const;
+
+export type CommodityKind = (typeof ALL_COMMODITIES)[number];
 
 export interface Commodity extends Comp {
     id: "commodity";

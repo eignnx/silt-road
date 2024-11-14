@@ -10,22 +10,27 @@ export function setupBtnHovers() {
     });
 }
 
-export function addButton(txt: string, { tag, anchor: anch, pos: position }): GameObj<any> {
-    const w = 24 * txt.length + 10;
+export function addButton(txt: string, {
+    tag,
+    anchor: anch,
+    pos: position,
+    fontSize: fontSize = 30
+}): GameObj<any> {
+    const w = 0.5 * fontSize * txt.length + 10;
     const btn = add([
         tag,
         "button",
         anchor(anch),
         area(),
         position,
-        color(BLACK),
-        rect(w, 60),
-        outline(8, BLACK),
+        color(DARK_BROWN),
+        rect(w, fontSize * 2),
+        outline(4, BLACK),
         layer("ui"),
         fixed(),
     ]).add([
         color(WHITE),
-        text(txt, { width: w, align: "center" }),
+        text(txt, { width: w, align: "center", size: fontSize, font: "monospace" }),
         anchor(anch),
         fixed(),
     ]);
